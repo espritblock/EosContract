@@ -1,2 +1,6 @@
 # EosContract
-eos_contract
+eos contract
+
+# list
+	
+	duobao 类夺宝类合约
