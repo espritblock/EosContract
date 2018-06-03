@@ -1,0 +1,2 @@
+# EosContract
+eos_contract
