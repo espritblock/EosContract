@@ -3,4 +3,4 @@ eos contract
 
 # list
 	
-	duobao 类夺宝类合约
+	duobao 夺宝类合约
