@@ -2,11 +2,11 @@
 	
 	基于EOS智能合约开发的一个夺宝应用的合约
 	
-	在EOSIO4.0开发并测试通过
+	在EOSIO1.0.5开发并测试通过
 	
 ## 一、挖矿夺宝合约业务说明：
 
-	1、创建夺宝活动，指定活动编码、开奖所需挖矿次数、每次挖矿消耗所发行token(这里是在自己的测试链上发行了叫做EOS的代币)数量等
+	1、创建夺宝活动，指定活动编码、开奖所需挖矿次数、每次挖矿消耗所发行token数量等
 
 	2、用户消费指定token参与夺宝，每参与一次，挖矿次数+1，达到总挖矿次数后随机开奖，参与次数越多，中奖的概率越大
 
@@ -19,7 +19,7 @@
 ### 2、duobao.hpp
 
 	定义了合约接口和活动相关表
-	活动信息表act_info，活动参与表act_userr。act_info对活动编号ano做了索引。act_user则对ano和参与人poster做了索引。
+	活动信息表act_info，活动参与表act_user。act_info对活动编号ano做了索引。act_user则对ano和参与人poster做了索引。
 
 	创建活动接口：void createact( uint64_t ano,uint64_t thres,uint64_t charge,uint64_t precision);
 	参数说明：

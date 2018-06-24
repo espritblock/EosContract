@@ -26,17 +26,28 @@ string choosewinner(vector<string> & seats){
 	return seats.at(winnerindex);
 }
 
-void duobao::createact(uint64_t ano,uint64_t thres,uint64_t charge,uint64_t precision){
+void duobao::createact(account_name issuer,account_name creator,uint64_t ano,uint64_t thres,uint64_t charge,string symbol,uint64_t precision){
 	require_auth(_self);
 	dainfo datable(_self,_self);
 	print("create act...");
+	
+	auto realCharge = charge;
+	if(precision>0){
+		for(int i=0;i<precision;i++){
+			realCharge*=10;
+		}
+	}
+	
 	datable.emplace(_self,[&](act_info &d){
 		d.aid=datable.available_primary_key();
+		d.issuer=issuer;
+		d.creator=creator;
 		d.ano=ano;
 		d.poster=_self;
 		d.thres=thres;
 		d.currtimes=0;
-		d.charge=charge;
+		d.charge=realCharge;
+		d.symbol=symbol;
 		d.opened=false;
 		d.precision=precision;
 	});
@@ -53,45 +64,58 @@ void duobao::joinact(account_name user,uint64_t ano){
 		auto info_da = info_ano_index.find( ano );
 		
 		uint64_t infoid=0;
-		eosio::print("aid: ", info_da->aid, "  ano: ", info_da->ano, " poster: ",info_da->poster," thres: ", info_da->thres,
-			" currtimes: ",info_da->currtimes," charge: ",info_da->charge," precision: ",info_da->precision," opened: ",info_da->opened," winner: ",info_da->winner);
+		eosio::print("aid: ", info_da->aid, "issuer: ",info_da->issuer,"  ano: ", info_da->ano, " poster: ",info_da->poster," thres: ", info_da->thres,
+			" currtimes: ",info_da->currtimes," charge: ",info_da->charge,"symbol: ",info_da->symbol," precision: ",info_da->precision," opened: ",info_da->opened," winner: ",info_da->winner);
 		infoid = info_da->aid;
 		uint64_t thres = info_da->thres;
 		uint64_t currtimes = info_da->currtimes;
-		eosio::print("thres: ",thres );
+		
+		int maxTimes =0;
+		if(thres>0){
+			maxTimes =thres/10;
+			maxTimes=maxTimes<=0?1:maxTimes;
+		}
+		
+		eosio::print("thres: ",thres,",maxTimes: ",maxTimes);
 
 		//1、活动是否已揭晓
 	  bool opened = info_da->opened;
 	  eosio::print("opened: ",opened );
 	 	eosio_assert(!opened,"活动已结束!");
-
-		//2、user用户转账给合约用户
-    string sym="EOS";
-    uint64_t precision= info_da->precision;
-    uint64_t charge= info_da->charge;
-    asset quantity(charge,string_to_symbol(precision,sym.c_str()));
-    action(
-        permission_level{user, N(active) },
-           N(tokenmaster), N(transfer),
-           std::make_tuple(user,_self, quantity, std::string("参与活动转账"))
-    ).send();
-    print( "参与活动转账成功:", name{user},quantity );
-
-		//3、算力+1
-    auto poster_index = usertable.template get_index<N(byposter)>();
+	 	
+	 	//2、是否最大参与次数
+	 	auto poster_index = usertable.template get_index<N(byposter)>();
 		auto pos = poster_index.find( user );
 
 		uint64_t aid=0;
 		bool exists=false;
+		uint16_t currTimes=0;
 		for (; pos != poster_index.end(); pos++)
 		{
 				if(pos->ano==ano){
 					aid=pos->aid;
 					exists=true;
+					currTimes = pos->times;
 					break;
 				}
 		}
+		eosio_assert(currTimes<maxTimes,"已达到该活动最大参与次数!");
 
+		//3、user用户转账给合约用户
+		account_name issuer=info_da->issuer;
+		account_name creator=info_da->creator;
+    string sym=info_da->symbol;
+    uint64_t precision= info_da->precision;
+    uint64_t charge= info_da->charge;
+    asset quantity(charge,string_to_symbol(precision,sym.c_str()));
+    action(
+        permission_level{user, N(active) },
+           issuer, N(transfer),
+           std::make_tuple(user,creator, quantity, std::string("参与活动转账"))
+    ).send();
+    print( "参与活动转账成功:", name{user},quantity );
+
+		//34、算力+1
     if(exists){
     		auto post=usertable.find(aid);
     	   usertable.modify(post,user,[&](auto & p){
@@ -111,7 +135,7 @@ void duobao::joinact(account_name user,uint64_t ano){
           p.currtimes++;
   		});
     
-    //4、是否达到开奖条件
+    //5、是否达到开奖条件
     if(thres==(currtimes+1)){
     	//产生获奖者
     	
