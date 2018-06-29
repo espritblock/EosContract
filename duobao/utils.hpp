@@ -39,7 +39,7 @@ void swap_item(vector<string> & vects,int &i,int &j){
 void duobao_shuffle(vector<string> & vects){
 	int i=0,j=0;
 	int size=vects.size();
-	for(int index=0;index<size*size*random(1,100);index++){
+	for(int index=0;index<size*random(1,2);index++){
 		i=random(0,size);
 		j=random(0,size);
 		swap_item(vects,i,j);

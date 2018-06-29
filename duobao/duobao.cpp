@@ -81,7 +81,7 @@ void duobao::joinact(account_name user,uint64_t ano){
 		//1、活动是否已揭晓
 	  bool opened = info_da->opened;
 	  eosio::print("opened: ",opened );
-	 	eosio_assert(!opened,"活动已结束!");
+	 	eosio_assert(!opened,"ACT_OVER");//活动已结束
 	 	
 	 	//2、是否最大参与次数
 	 	auto poster_index = usertable.template get_index<N(byposter)>();
@@ -89,19 +89,21 @@ void duobao::joinact(account_name user,uint64_t ano){
 
 		uint64_t aid=0;
 		bool exists=false;
-		uint16_t currTimes=0;
+		uint16_t userCurrTimes=0;
 		for (; pos != poster_index.end(); pos++)
 		{
-				if(pos->ano==ano){
+				if(pos->ano==ano && pos->poster==user){
 					aid=pos->aid;
 					exists=true;
-					currTimes = pos->times;
+					userCurrTimes = pos->times;
 					break;
 				}
 		}
-		eosio_assert(currTimes<maxTimes,"已达到该活动最大参与次数!");
-
-		//3、user用户转账给合约用户
+		eosio_assert(userCurrTimes<maxTimes,"ACT_MAXTIMES");//已达到该活动最大参与次数
+		
+		if(userCurrTimes<maxTimes){
+			
+			//3、user用户转账给合约用户
 		account_name issuer=info_da->issuer;
 		account_name creator=info_da->creator;
     string sym=info_da->symbol;
@@ -171,6 +173,8 @@ void duobao::joinact(account_name user,uint64_t ano){
   		});
 			
     }
+		}
+		
       
 }
 
