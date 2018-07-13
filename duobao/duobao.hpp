@@ -16,6 +16,9 @@ public:
   //@abi action
   void joinact(account_name user,uint64_t ano);
   
+  //@abi action
+  void flushuser(uint64_t ano);
+  
 private:
 	friend uint64_t choosewinner(vector<uint64_t> & seats); 
 

@@ -174,11 +174,41 @@ void duobao::joinact(account_name user,uint64_t ano){
 			
     }
 		}
-		
-      
+
+}
+
+void duobao::flushuser(uint64_t ano){
+    require_auth(_self);
+    dainfo infotable(_self,_self);
+    dauser usertable(_self,_self);
+    
+    auto info_ano_index = infotable.template get_index<N(byano)>();
+		auto info_da = info_ano_index.find( ano );
+
+		//活动是否结束
+	  bool opened = info_da->opened;
+	 	eosio_assert(opened,"ACT_STILL_OPEN");//活动未结束
+	 	
+	 	if(opened){
+	 			
+	 		auto ano_index = usertable.template get_index<N(byano)>();
+			auto anox = ano_index.find( ano );
+			
+			vector<uint64_t> aids;
+			while (anox != ano_index.end() && anox->ano == ano) {
+					aids.push_back(anox->aid);
+			    anox++;
+			}
+			
+	    for(vector<uint64_t>::iterator it=aids.begin();it!=aids.end();it++)
+	    {
+	    	auto auser = usertable.find(*it);
+	    	usertable.erase(auser);
+	    }
+
+		}
+     
 }
 
 
-
-
-EOSIO_ABI(duobao,(createact)(joinact))
+EOSIO_ABI(duobao,(createact)(joinact)(flushuser))
